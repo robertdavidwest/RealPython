@@ -1,18 +1,19 @@
 # views.py
 
+# imports
 from flask import (Flask, flash, redirect, render_template, request, session,
                    url_for)
 from flask.ext.sqlalchemy import SQLAlchemy
 from functools import wraps
+from forms import AddTaskForm, RegistrationForm, LoginForm
 
-from forms import AddTaskForm
-
+# config
 app = Flask(__name__)
 app.config.from_object('config')
 db = SQLAlchemy(app)
 
 # import the model
-from models import Task
+from models import Task, User
 
 
 def login_required(test):
@@ -32,21 +33,48 @@ def logout():
     flash('You are logged out. Bye. :(')
     return redirect(url_for('login'))
 
+@app.route('/register/', methods=['GET', 'POST'])
+def register():
+    error = None
+    form = RegistrationForm(request.form)
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            new_user = User(
+                form.name.data,
+                form.email.data,
+                form.password.data
+            )
+            db.session.add(new_user)
+            db.session.commit()
+            flash('Thanks for registering. Please login.')
+            return redirect(url_for('login'))
+        else:
+            return render_template('register.html', error=error)
+
+    if request.method == 'GET':
+        return render_template('register.html', form=form)
+
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
+    error = None
+    form = LoginForm(request.form)
     if request.method == 'POST':
-        if request.form['username'] != app.config['USERNAME'] or \
-                request.form['password'] != app.config['PASSWORD']:
-
-            error = 'Invalid Credentials. Please try again.'
-            return render_template('login.html', error=error)
+        if form.validate_on_submit():
+            u = User.query.filter_by(name=request.form['name'],
+                                     password=request.form['password']).first()
+            if u is None:
+                error = 'Invalid username or password.'
+                return render_template('login.html', form=form, error=error)
+            else:
+                session['logged_in'] = True
+                flash('You are logged in. Go crazy.')
+                return redirect(url_for('tasks'))
         else:
-            session['logged_in'] = True
-            return redirect(url_for('tasks'))
+            return render_template('login.html', form=form, error=error)
 
     if request.method == 'GET':
-        return render_template('login.html')
+        return render_template('login.html', form=form)
 
 @app.route('/tasks/')
 @login_required
@@ -102,3 +130,4 @@ def delete_entry(task_id):
     db.session.commit()
     flash('The task was deleted. Why not add a new one?')
     return redirect(url_for('tasks'))
+
