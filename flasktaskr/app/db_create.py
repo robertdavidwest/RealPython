@@ -5,8 +5,6 @@ from models import Task
 from datetime import date
 
 # create the database and the db table
-
-from config import DATABASE_PATH
 db.create_all()
 
 # insert data
