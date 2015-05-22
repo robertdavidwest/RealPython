@@ -4,6 +4,7 @@
 from flask import (Flask, flash, redirect, render_template, request, session,
                    url_for)
 from flask.ext.sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import IntegrityError
 from functools import wraps
 from forms import AddTaskForm, RegistrationForm, LoginForm
 
@@ -14,6 +15,13 @@ db = SQLAlchemy(app)
 
 # import the model
 from models import Task, User
+
+
+def flash_errors(form):
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(u"Error in the %s field - %s" % (
+                getattr(form, field).label.text, error), 'error')
 
 
 def login_required(test):
@@ -34,6 +42,7 @@ def logout():
     flash('You are logged out. Bye. :(')
     return redirect(url_for('login'))
 
+
 @app.route('/register/', methods=['GET', 'POST'])
 def register():
     error = None
@@ -45,12 +54,17 @@ def register():
                 form.email.data,
                 form.password.data
             )
-            db.session.add(new_user)
-            db.session.commit()
-            flash('Thanks for registering. Please login.')
-            return redirect(url_for('login'))
+            try:
+                db.session.add(new_user)
+                db.session.commit()
+                flash('Thanks for registering. Please login.')
+                return redirect(url_for('login'))
+            except IntegrityError:
+                error = """Oh now! That username and/or email already exist.
+                        Please try again"""
+                return render_template('register.html', form=form, error=error)
         else:
-            return render_template('register.html', error=error)
+            return render_template('register.html', error=error, form=form)
 
     if request.method == 'GET':
         return render_template('register.html', form=form)
@@ -116,7 +130,7 @@ def new_task():
             return render_template('tasks.html', form=form, error=error)
 
     if request.method == 'GET':
-        return render_template('taskts.html, form=form')
+        return render_template('tasks.html', form=form)
 
 # Mark tasks as complete
 @app.route('/complete/<int:task_id>/',)

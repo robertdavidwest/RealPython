@@ -34,9 +34,12 @@ font-weight: bold; }
 }
 .flash {
 background: #CEE5F5; padding: 0.5em;
-} .error {
-background: #F0D6D6;
-padding: 0.5em; }
+}
+.error {
+color: red;
+font-size: .8em;
+background-color: ffffff;
+}
 .datagrid table { border-collapse: collapse; text-align: left;
 width: 100%;
 }
