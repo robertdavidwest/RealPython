@@ -36,6 +36,7 @@ def login_required(test):
 
 
 @app.route('/logout/')
+@login_required
 def logout():
     session.pop('logged_in', None)
     session.pop('user_id', None)
@@ -60,7 +61,7 @@ def register():
                 flash('Thanks for registering. Please login.')
                 return redirect(url_for('login'))
             except IntegrityError:
-                error = """Oh now! That username and/or email already exist.
+                error = """Oh no! That username and/or email already exist.
                         Please try again"""
                 return render_template('register.html', form=form, error=error)
         else:
