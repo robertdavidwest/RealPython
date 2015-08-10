@@ -1,7 +1,6 @@
 {% extends "template.html" %}
 {% block content %}
     <h1>Welcome to the FlaskTaskr</h1>
-    <a href="/logout">Logout</a>
     <div class="add-task">
         <h3>Add a new task:</h3>
             <form action = "{{ url_for('new_task') }}" method="post">
@@ -24,7 +23,9 @@
                         {% endif %}
                     </span>
                 <p> {{ form.priority.label }}
-                    {{ form.priority }}
+                    {{
+                       form.priority(class="form-control", style="max-width:60px;")
+                    }}
                     <span class="error">
                         {% if form.priority.errors %}
                             {% for error in form.priority.errors %}
@@ -40,26 +41,27 @@
     <div class="entries">
         <br>
         <br>
-        <h2>Open Tasks:</h2>
-        <div class="datagrid">
-            <table>
+        <div class="lead">Open Tasks</div>
+        <br>
+            <table class="table table-striped">
                 <thead>
                     <tr>
-                        <th width="200px"><strong>Task Name</strong></th>
-                        <th width="75px"><strong>Due Date</strong></th>
-                        <th width="100px"><strong>Posted Date</strong></th>
-                        <th width="50px"><strong>Priority</strong></th>
-                        <th width="90px"><strong>Posted By</strong></th>
-                        <th><strong>Actions</strong></th>
+                        <th>Task Name</th>
+                        <th>Due Date</th>
+                        <th>Posted Date</th>
+                        <th>Priority</th>
+                        <th>Posted By</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
+                <tbody>
                 {% for o in open_tasks %}
                     <tr>
-                        <td width="200px">{{ o.name }}</td>
-                        <td width="75px">{{ o.due_date }}</td>
-                        <td width="100px">{{ o.posted_date }}</td>
-                        <td width="50px">{{ o.priority }}</td>
-                        <td width="90px">{{ o.poster.name }}</td>
+                        <td>{{ o.name }}</td>
+                        <td>{{ o.due_date }}</td>
+                        <td>{{ o.posted_date }}</td>
+                        <td>{{ o.priority }}</td>
+                        <td>{{ o.poster.name }}</td>
                         <td>
                             <a href="{{ url_for('delete_entry', task_id =
                                 o.task_id) }}">Delete</a>
@@ -68,6 +70,7 @@
                         </td>
                     </tr>
                 {% endfor %}
+                </tbody>
             </table>
         </div>
         <br>
@@ -75,32 +78,33 @@
     </div>
 
     <div class="entries">
-        <h2>Closed tasks:</h2>
-        <div class="datagrid">
-            <table>
+        <div class="lead">Closed tasks</div>
+            <table class="table table-striped">
                 <thead>
                 <tr>
-                    <th width="200px"><strong>Task Name</strong></th>
-                    <th width="75px"><strong>Due Date</strong></th>
-                    <th width="100px"><strong>Posted Date</strong></th>
-                    <th width="50px"><strong>Priority</strong></th>
-                    <th width="90px"><strong>Posted By</strong></th>
-                    <th><strong>Actions</strong></th>
+                    <th>Task Name</th>
+                    <th>Due Date</th>
+                    <th>Posted Date</th>
+                    <th>Priority</th>
+                    <th>Posted By</th>
+                    <th>Actions</th>
                 </tr>
                 </thead>
+                <tbody>
                 {% for c in closed_tasks %}
                     <tr>
-                        <td width="200px">{{ c.name }}</td>
-                        <td width="75px">{{ c.due_date }}</td>
-                        <td width="100px">{{ c.posted_date }}</td>
-                        <td width="50px">{{ c.priority }}</td>
-                        <td width="90px">{{ c.poster.name }}</td>
+                        <td>{{ c.name }}</td>
+                        <td>{{ c.due_date }}</td>
+                        <td>{{ c.posted_date }}</td>
+                        <td>{{ c.priority }}</td>
+                        <td>{{ c.poster.name }}</td>
                         <td>
                             <a href="{{ url_for('delete_entry', task_id =
                                 c.task_id) }}">Delete</a>
                         </td>
                     </tr>
                 {% endfor %}
+                </tbody>
             </table>
         </div>
     </div>

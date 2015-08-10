@@ -50,6 +50,14 @@ class ALLTests(unittest.TestCase):
         db.session.add(new_user)
         db.session.commit()
 
+    def create_admin_user(self):
+        new_user = User(name='Superman',
+                        email='admin@realpython.com',
+                        password='allpowerful',
+                        role='admin')
+        db.session.add(new_user)
+        db.session.commit()
+
     def create_task(self):
         return self.app.post('add/', data=dict(name='Go to the bank',
                                         due_date='02/05/2014',
@@ -99,7 +107,7 @@ class ALLTests(unittest.TestCase):
                                  'python', 'python')
         self.assertIn('Thanks for registering. Please login.', response.data)
 
-    def test_user_registration_error(self):
+    def test_duplicate_user_registration_throws_error(self):
         self.app.get('register/', follow_redirects=True)
         self.register('Michael', 'michael@realpython.com', 'python',
                       'python')
@@ -109,6 +117,11 @@ class ALLTests(unittest.TestCase):
                                  'python', 'python')
         self.assertIn('Oh no! That username and/or email already exist.',
                       response.data)
+
+    def test_user_registration_field_errors(self):
+        response = self.register('Michael', 'michael@realpython.com',
+                                 'python', '')
+        self.assertIn('This field is required', response.data)
 
     def test_logged_in_users_can_logout(self):
         self.register('johnsmith', 'jonhn@cats.com', 'onkonkonk', 'onkonkonk')
@@ -177,7 +190,59 @@ class ALLTests(unittest.TestCase):
         self.login('notdave', 'defnothispwordinnit')
         self.app.get('tasks/', follow_redirects=True)
         response = self.app.get('complete/1/', follow_redirects=True)
-        self.assertNotIn('The task was marked as complete. Nice', response.data)
+        self.assertIn('You can only update tasks that belong to you.',
+                      response.data)
+
+    def test_users_cannot_delete_tasks_that_are_not_created_by_them(self):
+        self.create_user('davesmith', 'some@email.com', 'badpassword')
+        self.login('davesmith', 'badpassword')
+        self.app.get('tasks/', follow_redirects=True)
+        self.create_task()
+        self.logout()
+        self.create_user('notdave', 'notdaves@emai.com', 'defnothispwordinnit')
+        self.login('notdave', 'defnothispwordinnit')
+        self.app.get('tasks/', follow_redirects=True)
+        response = self.app.get('delete/1/', follow_redirects=True)
+        self.assertIn('You can only delete tasks that belong to you.',
+                      response.data)
+
+    def test_default_user_role(self):
+
+        db.session.add(User('Johnny', 'john@doe.com', 'johnny'))
+        db.session.commit()
+
+        users = db.session.query(User).all()
+        print users
+        for user in users:
+            self.assertEquals(user.role, 'user')
+
+    def test_admin_users_can_complete_tasks_that_are_not_created_by_them(self):
+        self.create_user('Michael', 'michael@realpython.com', 'python')
+        self.login('Michael', 'python')
+        self.app.get('tasks/', follow_redirects=True)
+        self.create_task()
+        self.logout()
+        self.create_admin_user()
+        self.login('Superman', 'allpowerful')
+        self.app.get('tasks/', follow_redirects=True)
+        response = self.app.get("complete/1/", follow_redirects=True)
+        self.assertNotIn(
+            'You can only update tasks that belong to you.',
+            response.data
+        )
+
+    def test_admin_users_can_delete_tasks_that_are_not_created_by_them(self):
+        self.create_user('Michael', 'michael@realpython.com', 'python')
+        self.login('Michael', 'python')
+        self.app.get('tasks/', follow_redirects=True)
+        self.create_task()
+        self.logout()
+        self.create_admin_user()
+        self.login('Superman', 'allpowerful')
+        self.app.get('tasks/', follow_redirects=True)
+        response = self.app.get("delete/1/", follow_redirects=True)
+        self.assertNotIn('You can only delete tasks that belong to you',
+                         response.data)
 
 if __name__ == '__main__':
     unittest.main()

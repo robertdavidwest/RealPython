@@ -1,5 +1,10 @@
 body {
-font-family: sans-serif; background: #eee;
+    padding: 60px 0px;
+    background: #ffffff;
+}
+
+.footer {
+    padding-top: 30px;
 }
 a,h1,h2{ color: #377BA8;
 }
@@ -38,7 +43,6 @@ background: #CEE5F5; padding: 0.5em;
 .error {
 color: red;
 font-size: .8em;
-background-color: ffffff;
 }
 .datagrid table { border-collapse: collapse; text-align: left;
 width: 100%;
